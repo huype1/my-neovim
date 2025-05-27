@@ -109,17 +109,14 @@ vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { noremap = true, silent
 vim.keymap.set('n', '<C-t>', '<cmd>ToggleTerm dir=%:p:h<CR>', { noremap = true, silent = true })
 
 -- create custom function to toggle a new terminal in horizontal split
---
 vim.keymap.set('n', '<leader>tn', function()
   local Terminal = require('toggleterm.terminal').Terminal
   local new_term = Terminal:new { direction = 'horizontal' }
   new_term:toggle()
 end, { desc = '[T]oggle [N]ew Terminal' })
 
-vim.keymap.set('n', '<leader>ts', function()
-  local line = vim.api.nvim_get_current_line()
-  require('toggleterm').send_lines_to_terminal(line, false, false)
-end, { desc = '[T]oggle [S]end Current Line' })
+--close the file using bufferline extension
+vim.keymap.set('n', '<C-w>', ':BufferLineCyclePrev <BAR> bd #<CR>', { noremap = true, silent = true })
 
 -- Navigate buffers ctrl + p/n for previous/next file
 vim.keymap.set('n', '<C-p>', ':bp<CR>', { noremap = true, silent = true })
@@ -136,12 +133,12 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
--- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
--- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
--- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
--- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
--- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
---
+-- close the tab and then cycle back to the old file
+vim.keymap.set('n', '<C-w>', function()
+  vim.cmd 'BufferLineCyclePrev'
+  vim.cmd 'bdelete #'
+end, { noremap = true, silent = true })
+
 -- Highlight when yanking (copying) text
 --  Try it with `yap` in normal mode
 vim.api.nvim_create_autocmd('TextYankPost', {
@@ -215,24 +212,22 @@ require('lazy').setup({
     },
     config = function(_, opts)
       local chat = require 'CopilotChat'
-      local select = require 'CopilotChat.select'
+      -- local select = require 'CopilotChat.select'
 
       -- Setup the plugin
       chat.setup(opts)
 
       -- Key mappings
-      vim.keymap.set('n', '<leader>cc', ':CopilotChat ', { desc = 'CopilotChat - Quick question' })
+      vim.keymap.set('n', '<leader>cc', ':CopilotChat ', { desc = 'CopilotChat - Ask question' })
       vim.keymap.set('n', '<leader>cct', ':CopilotChatToggle<cr>', { desc = 'CopilotChat - Toggle' })
       vim.keymap.set('n', '<leader>ccr', ':CopilotChatReset<cr>', { desc = 'CopilotChat - Reset' })
       vim.keymap.set('n', '<leader>cce', '<cmd>CopilotChatExplain<cr>', { desc = 'CopilotChat - Explain code' })
       vim.keymap.set('n', '<leader>ccf', '<cmd>CopilotChatFix<cr>', { desc = 'CopilotChat - Fix code' })
-      vim.keymap.set('n', '<leader>cco', '<cmd>CopilotChatOptimize<cr>', { desc = 'CopilotChat - Optimize code' })
-      vim.keymap.set('n', '<leader>ccd', '<cmd>CopilotChatDocs<cr>', { desc = 'CopilotChat - Generate docs' })
-      vim.keymap.set('n', '<leader>ccs', '<cmd>CopilotChatTests<cr>', { desc = 'CopilotChat - Generate tests' })
 
-      -- Visual mode mappings
-      vim.keymap.set('v', '<leader>cc', ':CopilotChatVisual ', { desc = 'CopilotChat - Open in vertical split' })
-      vim.keymap.set('v', '<leader>cce', ':CopilotChatExplain<cr>', { desc = 'CopilotChat - Explain code' })
+      -- Key mappings for visual mode
+      vim.keymap.set('v', '<leader>cc', ':CopilotChatVisual ', { desc = 'CopilotChat - Ask about selection' })
+      vim.keymap.set('v', '<leader>cce', '<cmd>CopilotChatExplain<cr>', { desc = 'CopilotChat - Explain code' })
+      vim.keymap.set('v', '<leader>ccf', '<cmd>CopilotChatFix<cr>', { desc = 'CopilotChat - Fix code' })
     end,
   },
 
@@ -245,10 +240,6 @@ require('lazy').setup({
   },
 
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
-  --
-  -- This is often very useful to both group configuration, as well as handle
-  -- lazy loading plugins that don't need to be loaded immediately at startup.
-  --
   -- For example, in the following configuration, we use:
   --  event = 'VimEnter'
   --
@@ -348,10 +339,6 @@ require('lazy').setup({
       --
       -- The easiest way to use Telescope, is to start by doing something like:
       --  :Telescope help_tags
-      --
-      -- After running this command, a window will open up and you're able to
-      -- type in the prompt window. You'll see a list of `help_tags` options and
-      -- a corresponding preview of the help.
       --
       -- Two important keymaps to use while in Telescope are:
       --  - Insert mode: <c-/>
@@ -598,16 +585,10 @@ require('lazy').setup({
         },
       }
 
-      -- LSP servers and clients are able to communicate to each other what features they support.
-      --  By default, Neovim doesn't support everything that is in the LSP specification.
       --  When you add blink.cmp, luasnip, etc. Neovim now has *more* capabilities.
       --  So, we create new capabilities with blink.cmp, and then broadcast that to the servers.
       local capabilities = require('blink.cmp').get_lsp_capabilities()
 
-      -- Enable the following language servers
-      --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
-      --
-      --  Add any additional override configuration in the following tables. Available keys are:
       --  - cmd (table): Override the default command used to start the server
       --  - filetypes (table): Override the default list of associated filetypes for the server
       --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
@@ -891,18 +872,13 @@ require('lazy').setup({
         -- 'enter' for enter to accept
         -- 'none' for no mappings
         --
-        -- For an understanding of why the 'default' preset is recommended,
         -- you will need to read `:help ins-completion`
-        --
-        -- No, but seriously. Please read `:help ins-completion`, it is really good!
-        --
         -- All presets have the following mappings:
         -- <tab>/<s-tab>: move to right/left of your snippet expansion
         -- <c-space>: Open menu or open docs if already open
         -- <c-n>/<c-p> or <up>/<down>: Select next/previous item
         -- <c-e>: Hide menu
         -- <c-k>: Toggle signature help
-        --
         -- See :h blink-cmp-config-keymap for defining your own keymap
         preset = 'default',
 
@@ -1021,6 +997,7 @@ require('lazy').setup({
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
   },
+
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
@@ -1059,12 +1036,6 @@ require('lazy').setup({
       },
       indent = { enable = true, disable = { 'ruby' } },
     },
-    -- There are additional nvim-treesitter modules that you can use to interact
-    -- with nvim-treesitter. You should go explore a few and see what interests you:
-    --
-    --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
-    --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
-    --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
