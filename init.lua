@@ -107,10 +107,19 @@ vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { noremap = true, silent
 
 -- toggleterm.nvim custom keymapping
 vim.keymap.set('n', '<C-t>', '<cmd>ToggleTerm dir=%:p:h<CR>', { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>tn', ':ToggleTerm direction=horizontal<CR>', { noremap = true, silent = true, desc = '[T]oggle [N]ew Terminal' })
-vim.keymap.set('n', '<leader>tc', ':ToggleTermToggle<CR>', { noremap = true, silent = true, desc = '[T]oggle [C]urrent Terminal' })
-vim.keymap.set('n', '<leader>ts', ':ToggleTermSendCurrentLine<CR>', { noremap = true, silent = true, desc = '[T]oggle [S]end Current Line' })
-vim.keymap.set('n', '<leader>tk', ':ToggleTermKill<CR>', { noremap = true, silent = true, desc = '[T]oggle [K]ill Terminal' })
+
+-- create custom function to toggle a new terminal in horizontal split
+--
+vim.keymap.set('n', '<leader>tn', function()
+  local Terminal = require('toggleterm.terminal').Terminal
+  local new_term = Terminal:new { direction = 'horizontal' }
+  new_term:toggle()
+end, { desc = '[T]oggle [N]ew Terminal' })
+
+vim.keymap.set('n', '<leader>ts', function()
+  local line = vim.api.nvim_get_current_line()
+  require('toggleterm').send_lines_to_terminal(line, false, false)
+end, { desc = '[T]oggle [S]end Current Line' })
 
 -- Navigate buffers ctrl + p/n for previous/next file
 vim.keymap.set('n', '<C-p>', ':bp<CR>', { noremap = true, silent = true })
@@ -193,9 +202,40 @@ require('lazy').setup({
       numhl = true, -- Highlight line numbers on changes
     },
   },
+
   {
-    'github/copilot.vim',
+    'CopilotC-Nvim/CopilotChat.nvim',
+    dependencies = {
+      { 'github/copilot.vim' }, -- or zbirenbaum/copilot.lua
+      { 'nvim-lua/plenary.nvim', branch = 'master' }, -- for curl, log and async functions
+    },
+    -- build = "make tiktoken", -- Only on MacOS or Linux
+    opts = {
+      debug = false, -- Enable debugging
+    },
+    config = function(_, opts)
+      local chat = require 'CopilotChat'
+      local select = require 'CopilotChat.select'
+
+      -- Setup the plugin
+      chat.setup(opts)
+
+      -- Key mappings
+      vim.keymap.set('n', '<leader>cc', ':CopilotChat ', { desc = 'CopilotChat - Quick question' })
+      vim.keymap.set('n', '<leader>cct', ':CopilotChatToggle<cr>', { desc = 'CopilotChat - Toggle' })
+      vim.keymap.set('n', '<leader>ccr', ':CopilotChatReset<cr>', { desc = 'CopilotChat - Reset' })
+      vim.keymap.set('n', '<leader>cce', '<cmd>CopilotChatExplain<cr>', { desc = 'CopilotChat - Explain code' })
+      vim.keymap.set('n', '<leader>ccf', '<cmd>CopilotChatFix<cr>', { desc = 'CopilotChat - Fix code' })
+      vim.keymap.set('n', '<leader>cco', '<cmd>CopilotChatOptimize<cr>', { desc = 'CopilotChat - Optimize code' })
+      vim.keymap.set('n', '<leader>ccd', '<cmd>CopilotChatDocs<cr>', { desc = 'CopilotChat - Generate docs' })
+      vim.keymap.set('n', '<leader>ccs', '<cmd>CopilotChatTests<cr>', { desc = 'CopilotChat - Generate tests' })
+
+      -- Visual mode mappings
+      vim.keymap.set('v', '<leader>cc', ':CopilotChatVisual ', { desc = 'CopilotChat - Open in vertical split' })
+      vim.keymap.set('v', '<leader>cce', ':CopilotChatExplain<cr>', { desc = 'CopilotChat - Explain code' })
+    end,
   },
+
   --auto close tags
   {
     'windwp/nvim-ts-autotag',
@@ -586,25 +626,114 @@ require('lazy').setup({
         --   end,
         -- },
 
-        -- Tailwind CSS
-        tailwindcss = {},
+        tailwindcss = {
+          filetypes = {
+            'html',
+            'css',
+            'scss',
+            'javascript',
+            'javascriptreact',
+            'typescript',
+            'typescriptreact',
+          },
+          settings = {
+            tailwindCSS = {
+              experimental = {
+                classRegex = {
+                  'tw`([^`]*)',
+                  'tw="([^"]*)',
+                  'tw={"([^"}]*)',
+                  'tw\\.\\w+`([^`]*)',
+                  { 'clsx\\(([^)]*)\\)', "(?:'|\"|`)([^']*)(?:'|\"|`)" },
+                  { 'classnames\\(([^)]*)\\)', "'([^']*)'" },
+                  { 'cva\\(([^)]*)\\)', '["\'`]([^"\'`]*).*?["\'`]' },
+                },
+              },
+            },
+          },
+        },
 
-        -- ESLint for linting
-        eslint = {},
+        -- ESLint with React rules
+        eslint = {
+          filetypes = {
+            'javascript',
+            'javascriptreact',
+            'typescript',
+            'typescriptreact',
+          },
+          settings = {
+            workingDirectory = { mode = 'auto' },
+            experimental = {
+              useFlatConfig = false,
+            },
+          },
+        },
 
         -- HTML support
-        html = {},
+        html = {
+          filetypes = { 'html', 'javascriptreact', 'typescriptreact' },
+          settings = {
+            html = {
+              suggest = {
+                html5 = true,
+              },
+            },
+          },
+        },
 
         -- CSS support
-        cssls = {},
+        cssls = {
+          settings = {
+            css = {
+              validate = true,
+              lint = {
+                unknownAtRules = 'ignore',
+              },
+            },
+            scss = {
+              validate = true,
+              lint = {
+                unknownAtRules = 'ignore',
+              },
+            },
+          },
+        },
 
-        -- JSON support (for package.json, tsconfig.json, etc.)
+        -- JSON support
         jsonls = {},
 
-        yamlls = {}, -- YAML support
+        -- YAML support
+        yamlls = {
+          settings = {
+            yaml = {
+              validate = true,
+              hover = true,
+              completion = true,
+            },
+          },
+        },
 
-        emmet_ls = { -- Fast HTML/CSS autocomplete in JSX
-          filetypes = { 'html', 'css', 'javascriptreact', 'typescriptreact' },
+        -- Emmet for fast HTML/JSX completion
+        emmet_ls = {
+          filetypes = {
+            'html',
+            'css',
+            'scss',
+            'javascript',
+            'javascriptreact',
+            'typescript',
+            'typescriptreact',
+            'vue',
+            'svelte',
+          },
+          settings = {
+            emmet = {
+              includeLanguages = {
+                javascript = 'javascriptreact',
+                typescript = 'typescriptreact',
+              },
+            },
+          },
         },
 
         lua_ls = {
@@ -628,13 +757,14 @@ require('lazy').setup({
         'stylua',
         'emmet-ls',
         'yaml-language-server',
-        'eslint',
+        'eslint_d',
+        'tailwindcss-language-server',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
         ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-        automatic_installation = false,
+        automatic_installation = true,
         automatic_enabled = true,
         handlers = {
           function(server_name)
@@ -690,14 +820,31 @@ require('lazy').setup({
       },
     },
   },
+
   {
     'pmizio/typescript-tools.nvim',
-    dependencies = { 'nvim-lua/plenary.nvim' },
+    dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
     opts = {
       settings = {
         expose_as_code_actions = { 'add_missing_imports', 'remove_unused', 'fix_all' },
+        jsx_close_tag = {
+          enable = true,
+          filetypes = { 'javascriptreact', 'typescriptreact' },
+        },
       },
     },
+  },
+  {
+    'akinsho/bufferline.nvim',
+    dependencies = 'nvim-tree/nvim-web-devicons',
+    config = function()
+      require('bufferline').setup {
+        options = {
+          separator_style = 'slant',
+          show_buffer_close_icons = false,
+        },
+      }
+    end,
   },
   { -- Autocompletion
     'saghen/blink.cmp',
@@ -980,3 +1127,4 @@ vim.cmd [[
   autocmd FileType javascriptreact setlocal shiftwidth=2 tabstop=2
   autocmd FileType typescriptreact setlocal shiftwidth=2 tabstop=2
 ]]
+vim.g.copilot_enabled = false --disable copilot suggestions because it's annoying af
