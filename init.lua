@@ -1,3 +1,4 @@
+--     viết được tiếng Việt này, có lẽ encoding đang ở utf-8 đúng như cần thiết.
 --    After understanding a bit more about Lua, you can use `:help lua-guide` as a
 --     reference for how Neovim integrates Lua.
 --
@@ -101,19 +102,24 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
+--toggle neo-tree file explorer
+vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { noremap = true, silent = true })
+
+-- toggleterm.nvim custom keymapping
+vim.keymap.set('n', '<C-t>', '<cmd>ToggleTerm dir=%:p:h<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>tn', ':ToggleTerm direction=horizontal<CR>', { noremap = true, silent = true, desc = '[T]oggle [N]ew Terminal' })
+vim.keymap.set('n', '<leader>tc', ':ToggleTermToggle<CR>', { noremap = true, silent = true, desc = '[T]oggle [C]urrent Terminal' })
+vim.keymap.set('n', '<leader>ts', ':ToggleTermSendCurrentLine<CR>', { noremap = true, silent = true, desc = '[T]oggle [S]end Current Line' })
+vim.keymap.set('n', '<leader>tk', ':ToggleTermKill<CR>', { noremap = true, silent = true, desc = '[T]oggle [K]ill Terminal' })
+
+-- Navigate buffers ctrl + p/n for previous/next file
+vim.keymap.set('n', '<C-p>', ':bp<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<C-n>', ':bn<CR>', { noremap = true, silent = true })
+
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
--- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
--- is not what someone will guess without a bit more experience.
---
--- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
+-- for people to discover. Otherwise, you normally need to press <C-\><C-n>
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
-
--- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
 --  See `:help wincmd` for a list of all window commands
 vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
@@ -126,13 +132,9 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
 -- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
 -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
-
--- [[ Basic Autocommands ]]
---  See `:help lua-guide-autocommands`
-
+--
 -- Highlight when yanking (copying) text
 --  Try it with `yap` in normal mode
---  See `:help vim.hl.on_yank()`
 vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking (copying) text',
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
@@ -156,15 +158,7 @@ end
 local rtp = vim.opt.rtp
 rtp:prepend(lazypath)
 
--- [[ Configure and install plugins ]]
---
---  To check the current status of your plugins, run
---    :Lazy
---
 --  You can press `?` in this menu for help. Use `:q` to close the window
---
---  To update plugins you can run
---    :Lazy update
 --
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
@@ -174,9 +168,6 @@ require('lazy').setup({
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
   -- keys can be used to configure plugin behavior/loading/etc.
-  --
-  -- Use `opts = {}` to automatically pass options to a plugin's `setup()` function, forcing the plugin to be loaded.
-  --
 
   -- Alternatively, use `config = function() ... end` for full control over the configuration.
   -- If you prefer to call `setup` explicitly, use:
@@ -189,24 +180,28 @@ require('lazy').setup({
   --        end,
   --    }
   --
-  -- Here is a more advanced example where we pass configuration
-  -- options to `gitsigns.nvim`.
-  --
-  -- See `:help gitsigns` to understand what the configuration keys do
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
     opts = {
       signs = {
-        add = { text = '+' },
-        change = { text = '~' },
-        delete = { text = '_' },
-        topdelete = { text = '‾' },
-        changedelete = { text = '~' },
+        add = { text = '▎', hl = 'GitSignsAdd' },
+        change = { text = '│', hl = 'GitSignsChange' },
+        delete = { text = '󰘔', hl = 'GitSignsDelete' },
+        topdelete = { text = '󰘔', hl = 'GitSignsDelete' },
+        changedelete = { text = '', hl = 'GitSignsChange' },
       },
+      numhl = true, -- Highlight line numbers on changes
     },
   },
   {
     'github/copilot.vim',
+  },
+  --auto close tags
+  {
+    'windwp/nvim-ts-autotag',
+    config = function()
+      require('nvim-ts-autotag').setup()
+    end,
   },
 
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
@@ -225,7 +220,7 @@ require('lazy').setup({
 
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
-    event = 'VimEnter', -- Sets the loading event to 'VimEnter'
+    event = 'VeryLazy', -- Sets the loading event to 'VimEnter'
     opts = {
       -- delay between pressing a key and opening which-key (milliseconds)
       -- this setting is independent of vim.o.timeoutlen
@@ -418,25 +413,6 @@ require('lazy').setup({
       'saghen/blink.cmp',
     },
     config = function()
-      -- Brief aside: **What is LSP?**
-      --
-      -- LSP is an initialism you've probably heard, but might not understand what it is.
-      --
-      -- LSP stands for Language Server Protocol. It's a protocol that helps editors
-      -- and language tooling communicate in a standardized fashion.
-      --
-      -- In general, you have a "server" which is some tool built to understand a particular
-      -- language (such as `gopls`, `lua_ls`, `rust_analyzer`, etc.). These Language Servers
-      -- (sometimes called LSP servers, but that's kind of like ATM Machine) are standalone
-      -- processes that communicate with some "client" - in this case, Neovim!
-      --
-      -- LSP provides Neovim with features like:
-      --  - Go to definition
-      --  - Find references
-      --  - Autocompletion
-      --  - Symbol Search
-      --  - and more!
-      --
       -- Thus, Language Servers are external tools that must be installed separately from
       -- Neovim. This is where `mason` and related plugins come into play.
       --
@@ -496,6 +472,8 @@ require('lazy').setup({
           --  Useful when you're not sure what type a variable is and you want to see
           --  the definition of its *type*, not where it was *defined*.
           map('grt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
+          -- Show short document of the function under your cursor.
+          map('K', vim.lsp.buf.hover, '[K]eyword [H]over')
 
           -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)
           ---@param client vim.lsp.Client
@@ -594,24 +572,19 @@ require('lazy').setup({
       --  - filetypes (table): Override the default list of associated filetypes for the server
       --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
       --  - settings (table): Override the default settings passed when initializing the server.
-      --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         -- clangd = {},
         -- gopls = {},
         pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
-        --
-        -- Some languages (like typescript) have entire language plugins that can be useful:
-        --    https://github.com/pmizio/typescript-tools.nvim
-        --
-        -- But for many setups, the LSP (`ts_ls`) will work just fine
-        ts_ls = {
-          on_attach = function(client, bufnr)
-            -- Disable formatting (if you're using a formatter like prettier)
-            client.server_capabilities.documentFormattingProvider = true
-          end,
-        },
+        -- But for many setups, the LSP (`ts_ls`) will work just fine, currently using `typescript-tools.nvim`
+        -- ts_ls = {
+        --   on_attach = function(client, bufnr)
+        --     -- Disable formatting (if you're using a formatter like prettier)
+        --     client.server_capabilities.documentFormattingProvider = true
+        --   end,
+        -- },
 
         -- Tailwind CSS
         tailwindcss = {},
@@ -627,6 +600,12 @@ require('lazy').setup({
 
         -- JSON support (for package.json, tsconfig.json, etc.)
         jsonls = {},
+
+        yamlls = {}, -- YAML support
+
+        emmet_ls = { -- Fast HTML/CSS autocomplete in JSX
+          filetypes = { 'html', 'css', 'javascriptreact', 'typescriptreact' },
+        },
 
         lua_ls = {
           -- cmd = { ... },
@@ -644,29 +623,19 @@ require('lazy').setup({
         },
       }
 
-      -- Ensure the servers and tools above are installed
-      --
-      -- To check the current status of installed tools and/or manually install
-      -- other tools, you can run
-      --    :Mason
-      --
-      -- You can press `g?` for help in this menu.
-      --
-      -- `mason` had to be setup earlier: to configure its options see the
-      -- `dependencies` table for `nvim-lspconfig` above.
-      --
-      -- You can add other tools here that you want Mason to install
-      -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
-        'stylua', -- Used to format Lua code
-        'typescript-language-server', -- TypeScript Language Server
+        'stylua',
+        'emmet-ls',
+        'yaml-language-server',
+        'eslint',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
         ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
         automatic_installation = false,
+        automatic_enabled = true,
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
@@ -721,7 +690,15 @@ require('lazy').setup({
       },
     },
   },
-
+  {
+    'pmizio/typescript-tools.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    opts = {
+      settings = {
+        expose_as_code_actions = { 'add_missing_imports', 'remove_unused', 'fix_all' },
+      },
+    },
+  },
   { -- Autocompletion
     'saghen/blink.cmp',
     event = 'VimEnter',
@@ -744,12 +721,12 @@ require('lazy').setup({
           -- `friendly-snippets` contains a variety of premade snippets.
           --    See the README about individual language/framework/plugin snippets:
           --    https://github.com/rafamadriz/friendly-snippets
-          -- {
-          --   'rafamadriz/friendly-snippets',
-          --   config = function()
-          --     require('luasnip.loaders.from_vscode').lazy_load()
-          --   end,
-          -- },
+          {
+            'rafamadriz/friendly-snippets',
+            config = function()
+              require('luasnip.loaders.from_vscode').lazy_load()
+            end,
+          },
         },
         opts = {},
       },
@@ -846,6 +823,20 @@ require('lazy').setup({
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
 
+  {
+    'akinsho/toggleterm.nvim',
+    version = '*',
+    config = function()
+      require('toggleterm').setup {
+        direction = 'horizontal',
+        size = 17, -- Adjust the terminal height
+        open_mapping = '<C-t>', -- Toggle open/close with Ctrl-T
+        shade_terminals = true,
+        shell = 'powershell.exe', -- Use your preferred shell
+      }
+    end,
+  },
+
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
     config = function()
@@ -889,7 +880,27 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = {
+        'bash',
+        'c',
+        'diff',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'query',
+        'vim',
+        'vimdoc',
+        'yaml',
+        'json',
+        'javascript',
+        'typescript',
+        'css',
+        'scss',
+        'python',
+        'java',
+      },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -922,8 +933,8 @@ require('lazy').setup({
   require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
@@ -956,3 +967,16 @@ require('lazy').setup({
     },
   },
 })
+
+--custom color for gitsigns so it will be more visible
+vim.cmd [[
+  highlight GitSignsAdd guifg=#00FF00 guibg=NONE gui=bold
+  highlight GitSignsChange guifg=#FFA500 guibg=NONE gui=bold
+  highlight GitSignsDelete guifg=#FF2D2D guibg=NONE gui=bold
+]]
+
+--react specific settings, tabs and spaces are set to 2 spaces
+vim.cmd [[
+  autocmd FileType javascriptreact setlocal shiftwidth=2 tabstop=2
+  autocmd FileType typescriptreact setlocal shiftwidth=2 tabstop=2
+]]
