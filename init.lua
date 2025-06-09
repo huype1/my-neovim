@@ -115,8 +115,13 @@ vim.keymap.set('n', '<leader>tn', function()
   new_term:toggle()
 end, { desc = '[T]oggle [N]ew Terminal' })
 
+--change terminal focus
+local opts = { buffer = 0 }
+vim.keymap.set('t', '<C-h>', [[<Cmd>wincmd h<CR>]], opts)
+vim.keymap.set('t', '<C-l>', [[<Cmd>wincmd l<CR>]], opts)
+
 --close the file using bufferline extension
-vim.keymap.set('n', '<C-w>', ':BufferLineCyclePrev <BAR> bd #<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>Q', ':BufferLineCyclePrev <BAR> bd #<CR>', { noremap = true, silent = true })
 
 -- Navigate buffers ctrl + p/n for previous/next file
 vim.keymap.set('n', '<C-p>', ':bp<CR>', { noremap = true, silent = true })
@@ -134,7 +139,7 @@ vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower win
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 -- close the tab and then cycle back to the old file
-vim.keymap.set('n', '<C-w>', function()
+vim.keymap.set('n', '<C-q>', function()
   vim.cmd 'BufferLineCyclePrev'
   vim.cmd 'bdelete #'
 end, { noremap = true, silent = true })
@@ -194,9 +199,35 @@ require('lazy').setup({
         change = { text = '│', hl = 'GitSignsChange' },
         delete = { text = '󰘔', hl = 'GitSignsDelete' },
         topdelete = { text = '󰘔', hl = 'GitSignsDelete' },
-        changedelete = { text = '', hl = 'GitSignsChange' },
+        changedelete = { text = '', hl = 'GitSignsChange' },
       },
       numhl = true, -- Highlight line numbers on changes
+      on_attach = function(bufnr)
+        local gs = package.loaded.gitsigns
+
+        -- Navigation
+        vim.keymap.set('n', '<leader>hj', function()
+          gs.next_hunk()
+        end, { buffer = bufnr, desc = 'Next Git Hunk' })
+        vim.keymap.set('n', '<leader>hk', function()
+          gs.prev_hunk()
+        end, { buffer = bufnr, desc = 'Previous Git Hunk' })
+        vim.keymap.set('n', '<leader>hs', function()
+          gs.stage_hunk()
+        end, { buffer = bufnr, desc = 'Stage Git Hunk' })
+        vim.keymap.set('n', '<leader>hu', function()
+          gs.undo_stage_hunk()
+        end, { buffer = bufnr, desc = 'Undo Stage Hunk' })
+        vim.keymap.set('n', '<leader>hr', function()
+          gs.reset_hunk()
+        end, { buffer = bufnr, desc = 'Reset Git Hunk' })
+        vim.keymap.set('n', '<leader>hp', function()
+          gs.preview_hunk()
+        end, { buffer = bufnr, desc = 'preview git hunk' })
+        vim.keymap.set('n', '<leader>hb', function()
+          gs.blame_line()
+        end, { buffer = bufnr, desc = 'Git Blame Line' })
+      end,
     },
   },
 
@@ -208,7 +239,9 @@ require('lazy').setup({
     },
     -- build = "make tiktoken", -- Only on MacOS or Linux
     opts = {
+      context = 'buffer',
       debug = false, -- Enable debugging
+      model = 'claude-4.0-sonnet',
     },
     config = function(_, opts)
       local chat = require 'CopilotChat'
@@ -298,6 +331,7 @@ require('lazy').setup({
         { '<leader>s', group = '[S]earch' },
         { '<leader>t', group = '[T]oggle' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
+        { '<leader>c', group = 'Github [C]opilot' },
       },
     },
   },
@@ -354,12 +388,16 @@ require('lazy').setup({
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-        --   },
-        -- },
-        -- pickers = {}
+        defaults = {
+          hidden = true,
+          file_ignore_patterns = { 'node_modules', '.git', '__pycache__', 'dist', 'build' },
+        },
+        pickers = {
+          find_files = {
+            hidden = true,
+            file_ignore_patterns = { 'node_modules', '.git' }, -- Ignore for file searching too
+          },
+        },
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
@@ -543,7 +581,6 @@ require('lazy').setup({
               end,
             })
           end
-
           -- The following code creates a keymap to toggle inlay hints in your
           -- code, if the language server you are using supports them
           --
@@ -798,6 +835,9 @@ require('lazy').setup({
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         javascript = { 'prettierd', 'prettier', stop_after_first = true },
+        typescript = { 'prettierd', 'prettier', stop_after_first = true },
+        javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+        typescriptreact = { 'prettierd', 'prettier', stop_after_first = true },
       },
     },
   },
@@ -807,12 +847,36 @@ require('lazy').setup({
     dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
     opts = {
       settings = {
-        expose_as_code_actions = { 'add_missing_imports', 'remove_unused', 'fix_all' },
+        -- Enable auto imports
+        complete_function_calls = true,
+        include_completions_with_insert_text = true,
+        tsserver_plugins = {
+          '@typescript-language-features', -- Auto-import
+        },
+        -- Enable all import organizing features
+        expose_as_code_actions = {
+          'add_missing_imports',
+          'remove_unused',
+          'fix_all',
+        },
+        -- Enhanced import suggestions
+        preferences = {
+          importModuleSpecifierPreference = 'relative',
+          importModuleSpecifierEnding = 'minimal',
+          includeCompletionsForModuleExports = true,
+          includeCompletionsForImportStatements = true,
+        },
+        -- Better component detection
         jsx_close_tag = {
           enable = true,
           filetypes = { 'javascriptreact', 'typescriptreact' },
         },
       },
+      -- Improve project root detection for better import resolution
+      root_dir = function(fname)
+        local util = require 'lspconfig.util'
+        return util.root_pattern('tsconfig.json', 'package.json', 'jsconfig.json', '.git')(fname) or util.path.dirname(fname)
+      end,
     },
   },
   {
@@ -939,7 +1003,7 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      vim.cmd.colorscheme 'tokyonight-storm'
     end,
   },
 
@@ -1051,7 +1115,6 @@ require('lazy').setup({
   require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
-  require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
@@ -1098,4 +1161,4 @@ vim.cmd [[
   autocmd FileType javascriptreact setlocal shiftwidth=2 tabstop=2
   autocmd FileType typescriptreact setlocal shiftwidth=2 tabstop=2
 ]]
-vim.g.copilot_enabled = false --disable copilot suggestions because it's annoying af
+-- vim.g.copilot_enabled = false --disable copilot suggestions i admit i can't live without AI suggestion wtf
