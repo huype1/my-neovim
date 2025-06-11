@@ -241,7 +241,7 @@ require('lazy').setup({
     opts = {
       context = 'buffer',
       debug = false, -- Enable debugging
-      model = 'claude-4.0-sonnet',
+      model = 'claude-3.7-sonnet',
     },
     config = function(_, opts)
       local chat = require 'CopilotChat'
@@ -354,7 +354,6 @@ require('lazy').setup({
         -- `build` is used to run some command when the plugin is installed/updated.
         -- This is only run then, not every time Neovim starts up.
         build = 'make',
-
         -- `cond` is a condition used to determine whether this plugin should be
         -- installed and loaded.
         cond = function()
@@ -389,15 +388,24 @@ require('lazy').setup({
         --  All the info you're looking for is in `:help telescope.setup()`
         --
         defaults = {
-          hidden = true,
-          file_ignore_patterns = { 'node_modules', '.git', '__pycache__', 'dist', 'build' },
+          file_ignore_patterns = { '^node_modules', '^.git', '^__pycache__', '^dist', '^build' },
         },
         pickers = {
           find_files = {
             hidden = true,
-            file_ignore_patterns = { 'node_modules', '.git' }, -- Ignore for file searching too
+            -- Use fd with simple exclusions - respects .gitignore by default
+            find_command = {
+              'fd',
+              '--type',
+              'f',
+              '--hidden',
+              '--follow',
+              '--exclude',
+              '.git',
+            },
           },
         },
+
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
@@ -953,7 +961,7 @@ require('lazy').setup({
       appearance = {
         -- 'mono' (default) for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
         -- Adjusts spacing to ensure icons are aligned
-        nerd_font_variant = 'mono',
+        nerd_font_variant = 'normal',
       },
 
       completion = {
@@ -1115,7 +1123,34 @@ require('lazy').setup({
   require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
-  require 'kickstart.plugins.neo-tree',
+
+{
+  "nvim-neo-tree/neo-tree.nvim",
+  branch = "v3.x",
+  dependencies = {
+    "nvim-lua/plenary.nvim",
+    "nvim-tree/nvim-web-devicons",
+    "MunifTanjim/nui.nvim",
+  },
+  config = function()
+    require("neo-tree").setup({
+      filesystem = {
+        hide_dotfiles = false,
+        hide_gitignored = false,
+        hide_by_name = {
+          ".git",
+          ".DS_Store",
+          "node_modules",
+        },
+      },
+      window = {
+        mappings = {
+          ["H"] = "toggle_hidden",
+        },
+      },
+    })
+  end,
+}
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
@@ -1161,4 +1196,4 @@ vim.cmd [[
   autocmd FileType javascriptreact setlocal shiftwidth=2 tabstop=2
   autocmd FileType typescriptreact setlocal shiftwidth=2 tabstop=2
 ]]
--- vim.g.copilot_enabled = false --disable copilot suggestions i admit i can't live without AI suggestion wtf
+vim.g.copilot_enabled = false --disable copilot suggestions
