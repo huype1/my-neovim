@@ -14,6 +14,7 @@
 --
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
+vim.diagnostic.open_float()
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
@@ -102,8 +103,8 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
---toggle neo-tree file explorer
-vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { noremap = true, silent = true })
+-- --toggle neo-tree file explorer
+-- vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { noremap = true, silent = true })
 
 -- toggleterm.nvim custom keymapping
 vim.keymap.set('n', '<C-t>', '<cmd>ToggleTerm dir=%:p:h<CR>', { noremap = true, silent = true })
@@ -231,38 +232,38 @@ require('lazy').setup({
     },
   },
 
-  {
-    'CopilotC-Nvim/CopilotChat.nvim',
-    dependencies = {
-      { 'github/copilot.vim' }, -- or zbirenbaum/copilot.lua
-      { 'nvim-lua/plenary.nvim', branch = 'master' }, -- for curl, log and async functions
-    },
-    -- build = "make tiktoken", -- Only on MacOS or Linux
-    opts = {
-      context = 'buffer',
-      debug = false, -- Enable debugging
-      model = 'claude-3.7-sonnet',
-    },
-    config = function(_, opts)
-      local chat = require 'CopilotChat'
-      -- local select = require 'CopilotChat.select'
-
-      -- Setup the plugin
-      chat.setup(opts)
-
-      -- Key mappings
-      vim.keymap.set('n', '<leader>cc', ':CopilotChat ', { desc = 'CopilotChat - Ask question' })
-      vim.keymap.set('n', '<leader>cct', ':CopilotChatToggle<cr>', { desc = 'CopilotChat - Toggle' })
-      vim.keymap.set('n', '<leader>ccr', ':CopilotChatReset<cr>', { desc = 'CopilotChat - Reset' })
-      vim.keymap.set('n', '<leader>cce', '<cmd>CopilotChatExplain<cr>', { desc = 'CopilotChat - Explain code' })
-      vim.keymap.set('n', '<leader>ccf', '<cmd>CopilotChatFix<cr>', { desc = 'CopilotChat - Fix code' })
-
-      -- Key mappings for visual mode
-      vim.keymap.set('v', '<leader>cc', ':CopilotChatVisual ', { desc = 'CopilotChat - Ask about selection' })
-      vim.keymap.set('v', '<leader>cce', '<cmd>CopilotChatExplain<cr>', { desc = 'CopilotChat - Explain code' })
-      vim.keymap.set('v', '<leader>ccf', '<cmd>CopilotChatFix<cr>', { desc = 'CopilotChat - Fix code' })
-    end,
-  },
+  -- {
+  --   'CopilotC-Nvim/CopilotChat.nvim',
+  --   dependencies = {
+  --     { 'github/copilot.vim' }, -- or zbirenbaum/copilot.lua
+  --     { 'nvim-lua/plenary.nvim', branch = 'master' }, -- for curl, log and async functions
+  --   },
+  --   -- build = "make tiktoken", -- Only on MacOS or Linux
+  --   opts = {
+  --     context = 'buffer',
+  --     debug = false, -- Enable debugging
+  --     model = 'claude-3.7-sonnet',
+  --   },
+  --   config = function(_, opts)
+  --     local chat = require 'CopilotChat'
+  --     -- local select = require 'CopilotChat.select'
+  --
+  --     -- Setup the plugin
+  --     chat.setup(opts)
+  --
+  --     -- Key mappings
+  --     vim.keymap.set('n', '<leader>cc', ':CopilotChat ', { desc = 'CopilotChat - Ask question' })
+  --     vim.keymap.set('n', '<leader>cct', ':CopilotChatToggle<cr>', { desc = 'CopilotChat - Toggle' })
+  --     vim.keymap.set('n', '<leader>ccr', ':CopilotChatReset<cr>', { desc = 'CopilotChat - Reset' })
+  --     vim.keymap.set('n', '<leader>cce', '<cmd>CopilotChatExplain<cr>', { desc = 'CopilotChat - Explain code' })
+  --     vim.keymap.set('n', '<leader>ccf', '<cmd>CopilotChatFix<cr>', { desc = 'CopilotChat - Fix code' })
+  --
+  --     -- Key mappings for visual mode
+  --     vim.keymap.set('v', '<leader>cc', ':CopilotChatVisual ', { desc = 'CopilotChat - Ask about selection' })
+  --     vim.keymap.set('v', '<leader>cce', '<cmd>CopilotChatExplain<cr>', { desc = 'CopilotChat - Explain code' })
+  --     vim.keymap.set('v', '<leader>ccf', '<cmd>CopilotChatFix<cr>', { desc = 'CopilotChat - Fix code' })
+  --   end,
+  -- },
 
   --auto close tags
   {
@@ -1124,33 +1125,36 @@ require('lazy').setup({
   require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
 
-{
-  "nvim-neo-tree/neo-tree.nvim",
-  branch = "v3.x",
-  dependencies = {
-    "nvim-lua/plenary.nvim",
-    "nvim-tree/nvim-web-devicons",
-    "MunifTanjim/nui.nvim",
-  },
-  config = function()
-    require("neo-tree").setup({
-      filesystem = {
-        hide_dotfiles = false,
-        hide_gitignored = false,
-        hide_by_name = {
-          ".git",
-          ".DS_Store",
-          "node_modules",
-        },
-      },
-      window = {
-        mappings = {
-          ["H"] = "toggle_hidden",
-        },
-      },
-    })
-  end,
-}
+  -- {
+  --   'nvim-neo-tree/neo-tree.nvim',
+  --   branch = 'v3.x',
+  --   dependencies = {
+  --     'nvim-lua/plenary.nvim',
+  --     'nvim-tree/nvim-web-devicons',
+  --     'MunifTanjim/nui.nvim',
+  --   },
+  --   config = function()
+  --     require('neo-tree').setup {
+  --       filesystem = {
+  --         hide_dotfiles = false,
+  --         hide_gitignored = false,
+  --         hide_by_name = {
+  --           '.git',
+  --           '.DS_Store',
+  --           'node_modules',
+  --         },
+  --         update_focused_file = {
+  --           enable = true,
+  --         },
+  --       },
+  --       window = {
+  --         mappings = {
+  --           ['H'] = 'toggle_hidden',
+  --         },
+  --       },
+  --     }
+  --   end,
+  -- },
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
@@ -1196,4 +1200,4 @@ vim.cmd [[
   autocmd FileType javascriptreact setlocal shiftwidth=2 tabstop=2
   autocmd FileType typescriptreact setlocal shiftwidth=2 tabstop=2
 ]]
-vim.g.copilot_enabled = false --disable copilot suggestions
+-- vim.g.copilot_enabled = false --disable copilot suggestions
