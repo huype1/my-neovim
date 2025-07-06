@@ -72,6 +72,7 @@ vim.o.splitbelow = true
 --   and `:help lua-options-guide`
 vim.o.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
+vim.opt.termguicolors = true
 
 -- Preview substitutions live, as you type!
 vim.o.inccommand = 'split'
@@ -117,12 +118,9 @@ vim.keymap.set('n', '<leader>tn', function()
 end, { desc = '[T]oggle [N]ew Terminal' })
 
 --change terminal focus
-local opts = { buffer = 0 }
-vim.keymap.set('t', '<C-h>', [[<Cmd>wincmd h<CR>]], opts)
-vim.keymap.set('t', '<C-l>', [[<Cmd>wincmd l<CR>]], opts)
-
---close the file using bufferline extension
-vim.keymap.set('n', '<leader>Q', ':BufferLineCyclePrev <BAR> bd #<CR>', { noremap = true, silent = true })
+-- local opts = { buffer = 0 }
+-- vim.keymap.set('t', '<C-h>', [[<Cmd>wincmd h<CR>]], opts)
+-- vim.keymap.set('t', '<C-l>', [[<Cmd>wincmd l<CR>]], opts)
 
 -- Navigate buffers ctrl + p/n for previous/next file
 vim.keymap.set('n', '<C-p>', ':bp<CR>', { noremap = true, silent = true })
@@ -140,9 +138,9 @@ vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower win
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 -- close the tab and then cycle back to the old file
+
 vim.keymap.set('n', '<C-q>', function()
-  vim.cmd 'BufferLineCyclePrev'
-  vim.cmd 'bdelete #'
+  vim.cmd 'bp | bd #'
 end, { noremap = true, silent = true })
 
 -- Highlight when yanking (copying) text
@@ -404,6 +402,10 @@ require('lazy').setup({
               '--exclude',
               '.git',
             },
+            buffers = {
+              sort_mru = true,
+              ignore_current_buffer = true,
+            },
           },
         },
 
@@ -431,6 +433,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
+      vim.keymap.set('n', '<leader>fb', '<cmd>Telescope buffers<CR>', { desc = 'Find Buffers' })
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
         -- You can pass additional configuration to Telescope to change the theme, layout, etc.
@@ -888,18 +891,18 @@ require('lazy').setup({
       end,
     },
   },
-  {
-    'akinsho/bufferline.nvim',
-    dependencies = 'nvim-tree/nvim-web-devicons',
-    config = function()
-      require('bufferline').setup {
-        options = {
-          separator_style = 'slant',
-          show_buffer_close_icons = false,
-        },
-      }
-    end,
-  },
+  -- {
+  --   'akinsho/bufferline.nvim',
+  --   dependencies = 'nvim-tree/nvim-web-devicons',
+  --   config = function()
+  --     require('bufferline').setup {
+  --       options = {
+  --         separator_style = 'slant',
+  --         show_buffer_close_icons = false,
+  --       },
+  --     }
+  --   end,
+  -- },
   { -- Autocompletion
     'saghen/blink.cmp',
     event = 'VimEnter',
@@ -1171,7 +1174,7 @@ require('lazy').setup({
     -- If you are using a Nerd Font: set icons to an empty table which will use the
     -- default lazy.nvim defined Nerd Font icons, otherwise define a unicode icons table
     icons = vim.g.have_nerd_font and {} or {
-      cmd = '⌘',
+      -- cmd = '⌘',
       config = '🛠',
       event = '📅',
       ft = '📂',
