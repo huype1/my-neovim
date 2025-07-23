@@ -88,11 +88,11 @@ vim.o.scrolloff = 10
 -- See `:help 'confirm'`
 vim.o.confirm = true
 
--- Set tab to 4 spaces
-vim.o.tabstop = 4
-vim.o.shiftwidth = 4
+-- Set tab to 2 spaces because im a zesty js dev
+vim.o.tabstop = 2
+vim.o.shiftwidth = 2
 vim.o.expandtab = true -- This is crucial: it tells Vim to insert spaces when you press Tab
-vim.o.softtabstop = 4 -- This makes backspace work correctly with 4-space indents
+vim.o.softtabstop = 2 -- This makes backspace work correctly with 4-space indents
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -117,11 +117,6 @@ vim.keymap.set('n', '<leader>tn', function()
   new_term:toggle()
 end, { desc = '[T]oggle [N]ew Terminal' })
 
---change terminal focus
--- local opts = { buffer = 0 }
--- vim.keymap.set('t', '<C-h>', [[<Cmd>wincmd h<CR>]], opts)
--- vim.keymap.set('t', '<C-l>', [[<Cmd>wincmd l<CR>]], opts)
-
 -- Navigate buffers ctrl + p/n for previous/next file
 vim.keymap.set('n', '<C-p>', ':bp<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<C-n>', ':bn<CR>', { noremap = true, silent = true })
@@ -138,9 +133,14 @@ vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower win
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 -- close the tab and then cycle back to the old file
-
+-- for the last one it wont broke no more
 vim.keymap.set('n', '<C-q>', function()
-  vim.cmd 'bp | bd #'
+  local buffers = vim.fn.getbufinfo { buflisted = 1 }
+  if #buffers > 1 then
+    vim.cmd 'bp | bd #'
+  else
+    vim.cmd 'bd'
+  end
 end, { noremap = true, silent = true })
 
 -- Highlight when yanking (copying) text
@@ -433,7 +433,6 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
-      vim.keymap.set('n', '<leader>fb', '<cmd>Telescope buffers<CR>', { desc = 'Find Buffers' })
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
         -- You can pass additional configuration to Telescope to change the theme, layout, etc.
